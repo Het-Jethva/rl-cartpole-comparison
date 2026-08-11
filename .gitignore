@@ -28,3 +28,6 @@ NOTES.md
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Submission archive (regenerate with package_submission.py)
+submission/
