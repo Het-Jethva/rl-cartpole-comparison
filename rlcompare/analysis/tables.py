@@ -59,6 +59,15 @@ def _steps(value: float | None) -> str:
     return "---" if value is None else f"{value / 1000:.0f}k"
 
 
+def _count(value: float) -> str:
+    """Format a count, keeping small values exact.
+
+    REINFORCE performs a few hundred updates in a whole run, so rounding to
+    thousands would print it as zero.
+    """
+    return f"{value / 1000:.0f}k" if value >= 1000 else f"{value:.0f}"
+
+
 def table_tradeoff(
     study: dict[str, Any], results_root: Path, out: Path, package_root: Path
 ) -> Path:
@@ -77,7 +86,7 @@ def table_tradeoff(
             f"{summary.final_iqm:.0f} "
             f"[{summary.final_ci[0]:.0f}, {summary.final_ci[1]:.0f}] & "
             f"{summary.wall_clock_mean:.0f} & "
-            f"{summary.updates_mean / 1000:.0f}k & "
+            f"{_count(summary.updates_mean)} & "
             f"{summary.failure_rate * 100:.0f}\\% & "
             f"{lines} / {hyperparameters} \\\\"
         )
@@ -218,6 +227,7 @@ def macros(
         lines.append(rf"\newcommand{{\{name}}}{{{value}}}")
 
     define("NumSeeds", str(len(study["seeds"]["evaluation"])))
+    define("NumSeedsSweep", str(len(study["seeds"]["sweep"])))
     define("NumTuningSeeds", str(len(study["seeds"]["tuning"])))
     define("NumTrials", str(study["tuning"]["trials"]))
     define("StepBudget", f"{study['run']['total_steps'] // 1000}k")
@@ -241,7 +251,7 @@ def macros(
         define(f"{prefix}CiLow", f"{summary.final_ci[0]:.0f}")
         define(f"{prefix}CiHigh", f"{summary.final_ci[1]:.0f}")
         define(f"{prefix}Time", f"{summary.wall_clock_mean:.0f}")
-        define(f"{prefix}Updates", f"{summary.updates_mean / 1000:.0f}k")
+        define(f"{prefix}Updates", _count(summary.updates_mean))
         define(f"{prefix}Failure", f"{summary.failure_rate * 100:.0f}")
         define(f"{prefix}Solve", _steps(summary.steps_to_solve_median))
         define(f"{prefix}Loc", str(count_code_lines(package_root / METHOD_SOURCES[method])))

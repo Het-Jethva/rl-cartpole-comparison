@@ -13,6 +13,26 @@ The paper does not rank the methods. All three solve CartPole, so the question i
 what each one **costs**: environment samples, computation, reliability across
 seeds, and implementation effort.
 
+![Learning curves](paper/figures/learning_curves.png)
+
+## Headline result
+
+Interquartile mean over 10 seeds, identical budget of 100,000 environment steps:
+
+| Method | Steps to solve | Final return (IQM) | Wall clock | Gradient updates | Failed seeds | LoC / hyperparams |
+| --- | --- | --- | --- | --- | --- | --- |
+| Tabular Q-learning | 36k | 226 [133, 390] | **16 s** | 100,000 | 10% | 87 / 7 |
+| DQN | 55k | 486 [354, 500] | 214 s | 99,001 | 0% | 136 / 12 |
+| REINFORCE + baseline | **18k** | **500** [493, 500] | 46 s | **470** | 0% | 113 / **6** |
+
+The orderings disagree, which is the point. REINFORCE reaches the threshold first
+and ends at the maximum return using two orders of magnitude fewer gradient
+updates than DQN. Tabular Q-learning is the fastest to run and the least
+reliable — every seed reaches a return of 500 at some point, and none holds it,
+because the discretisation its exact representation demands makes distinct states
+indistinguishable. Removing DQN's target network collapses it to a return of 9;
+removing REINFORCE's baseline costs it 139 return but it still learns.
+
 ## Deliverables
 
 - `paper/paper.pdf` — the research paper (IEEE two-column)

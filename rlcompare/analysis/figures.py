@@ -65,6 +65,30 @@ def _plot_curve(ax, stats, colour: str, label: str) -> None:
     ax.fill_between(stats.steps, stats.low, stats.high, color=colour, alpha=0.18, linewidth=0)
 
 
+def _save(fig, out: Path, name: str) -> Path:
+    """Write the PDF the paper includes, and a PNG for the README.
+
+    Returns the PDF path, which is what the paper references.
+    """
+    pdf = out / f"{name}.pdf"
+    fig.savefig(pdf)
+    fig.savefig(out / f"{name}.png", dpi=200)
+    plt.close(fig)
+    return pdf
+
+
+def _legend_box(ax, **kwargs) -> None:
+    """Place a legend in the empty lower-right corner, over a translucent patch.
+
+    Every curve here trends upwards, so the upper-left corner that matplotlib
+    prefers is exactly where the data is.
+    """
+    ax.legend(
+        loc="lower right", frameon=True, framealpha=0.9,
+        edgecolor="none", borderpad=0.4, **kwargs,
+    )
+
+
 def _thousands(ax) -> None:
     ax.xaxis.set_major_formatter(
         matplotlib.ticker.FuncFormatter(lambda x, _: f"{x / 1000:g}k")
@@ -86,19 +110,16 @@ def figure_learning_curves(study: dict[str, Any], results_root: Path, out: Path)
 
     ax.axhline(threshold, color="0.35", linestyle="--", linewidth=0.8)
     ax.text(
-        0.99, threshold + 8, "solved", ha="right", va="bottom",
+        0.02, threshold + 8, "solved", ha="left", va="bottom",
         transform=ax.get_yaxis_transform(), color="0.35", fontsize=6.5,
     )
     ax.set_xlabel("Environment steps")
     ax.set_ylabel("Evaluation return")
     ax.set_ylim(0, 540)
     _thousands(ax)
-    ax.legend(loc="upper left", frameon=False)
+    _legend_box(ax)
 
-    path = out / "learning_curves.pdf"
-    fig.savefig(path)
-    plt.close(fig)
-    return path
+    return _save(fig, out, "learning_curves")
 
 
 def figure_sweeps(study: dict[str, Any], results_root: Path, out: Path) -> Path:
@@ -124,13 +145,10 @@ def figure_sweeps(study: dict[str, Any], results_root: Path, out: Path) -> Path:
         ax.set_xlabel("Environment steps")
         ax.set_ylim(0, 540)
         _thousands(ax)
-        ax.legend(loc="upper left", frameon=False, ncols=1, handlelength=1.2)
+        _legend_box(ax, ncols=2, handlelength=1.0)
     np.atleast_1d(axes)[0].set_ylabel("Evaluation return")
 
-    path = out / "sweeps.pdf"
-    fig.savefig(path)
-    plt.close(fig)
-    return path
+    return _save(fig, out, "sweeps")
 
 
 def figure_ablations(study: dict[str, Any], results_root: Path, out: Path) -> Path:
@@ -156,13 +174,10 @@ def figure_ablations(study: dict[str, Any], results_root: Path, out: Path) -> Pa
         ax.set_xlabel("Environment steps")
         ax.set_ylim(0, 540)
         _thousands(ax)
-        ax.legend(loc="upper left", frameon=False)
+        _legend_box(ax)
     np.atleast_1d(axes)[0].set_ylabel("Evaluation return")
 
-    path = out / "ablations.pdf"
-    fig.savefig(path)
-    plt.close(fig)
-    return path
+    return _save(fig, out, "ablations")
 
 
 def figure_seed_scatter(study: dict[str, Any], results_root: Path, out: Path) -> Path:
@@ -190,10 +205,7 @@ def figure_seed_scatter(study: dict[str, Any], results_root: Path, out: Path) ->
     ax.set_ylim(0, 540)
     ax.set_xlim(-0.5, len(methods) - 0.5)
 
-    path = out / "seed_scatter.pdf"
-    fig.savefig(path)
-    plt.close(fig)
-    return path
+    return _save(fig, out, "seed_scatter")
 
 
 def _format(value: Any) -> str:

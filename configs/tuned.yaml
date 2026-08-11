@@ -1,0 +1,21 @@
+# Selected by rlcompare's equal-budget random search.
+# Regenerate with: python run.py tune
+dqn:
+  batch_size: 32
+  eps_decay_steps: 10000
+  lr: 0.0003
+  target_update_interval: 500
+reinforce:
+  baseline_lr: 0.003
+  episodes_per_update: 1
+  gamma: 0.999
+  lr: 0.0003
+tabular:
+  alpha: 0.5
+  bins:
+  - 4
+  - 4
+  - 8
+  - 8
+  eps_decay_steps: 10000
+  gamma: 0.99
