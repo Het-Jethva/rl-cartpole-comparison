@@ -15,10 +15,18 @@
 \title{A Comparative Study of Value-Based and Policy-Based\\
 Reinforcement Learning on CartPole-v1}
 
+% ---------------------------------------------------------------------------
+% TODO(author): replace the institution, department and course code below.
+% They are the only placeholders left in this document.
+% ---------------------------------------------------------------------------
+\newcommand{\Institution}{INSTITUTION NAME}
+\newcommand{\Department}{Department of Computer Science}
+\newcommand{\CourseCode}{COURSE CODE}
+
 \author{\IEEEauthorblockN{Het Jethva}
-\IEEEauthorblockA{\textit{Department of Computer Science} \\
-\textit{[INSTITUTION]}\\
-[COURSE CODE] \\
+\IEEEauthorblockA{\textit{\Department} \\
+\textit{\Institution} \\
+\CourseCode \\
 hetjethva07@gmail.com}}
 
 \maketitle
@@ -33,16 +41,233 @@ function approximation, empirical comparison
 \end{IEEEkeywords}
 
 \section{Introduction}
-% INTRODUCTION
+
+CartPole \cite{barto1983} is the standard first problem in reinforcement
+learning. It is small, it is fast, and every general-purpose method solves it.
+That last property is what makes it interesting for a comparison: because the
+outcome is not in doubt, the question stops being \emph{which method works} and
+becomes \emph{what each method costs to make it work}.
+
+This paper compares three methods that sit at three levels of approximation:
+
+\begin{itemize}
+\item \textbf{Tabular Q-learning} \cite{watkins1992}, which represents the value
+      function exactly over a discretised state space;
+\item \textbf{DQN} \cite{mnih2015}, which replaces the table with a neural
+      network and adds the two devices---a replay buffer and a target
+      network---that make that replacement stable;
+\item \textbf{REINFORCE with a learned baseline} \cite{williams1992}, which
+      abandons the value function as the object of interest and optimises the
+      policy directly.
+\end{itemize}
+
+The comparison is not a ranking. All three methods reach a working policy on
+CartPole-v1, so a claim of the form ``method X is best'' would be both
+uninformative and already known. The contribution here is a \emph{trade-off map}:
+a measurement of what each method spends to arrive at that policy, along four
+axes that are usually reported separately or not at all---environment samples,
+computation, reliability across random seeds, and implementation effort.
+
+Two design commitments make the resulting numbers comparable. First, every method
+runs under a single shared training loop with an identical budget of
+\StepBudget{} environment steps and an identical evaluation procedure, so no
+method can gain an advantage from the harness. Second, hyperparameters are
+selected by a random search with an equal trial budget per method, on seeds
+disjoint from those used for the reported results. Without the second commitment,
+a comparison paper measures how the author distributed their attention.
+
+The contributions are:
+
+\begin{enumerate}
+\item A controlled comparison of the three methods on CartPole-v1 over
+      \NumSeeds{} seeds each, under a shared budget and a fixed evaluation set.
+\item A trade-off table quantifying sample cost, compute cost, reliability and
+      implementation cost together, including the implementation-cost axis that
+      empirical RL papers normally omit.
+\item A sensitivity study for each method over the hyperparameter that carries
+      its characteristic failure mode, and ablations of the two components that
+      distinguish the deep methods from their textbook forms.
+\item A complete, seed-reproducible implementation with the full result set.
+\end{enumerate}
 
 \section{Background}
-% BACKGROUND
+
+\subsection{Problem setting}
+
+Reinforcement learning problems are modelled as a Markov decision process
+$(\mathcal{S}, \mathcal{A}, P, r, \gamma)$, where $P(s' \mid s, a)$ is the
+transition distribution, $r(s,a)$ the reward, and $\gamma \in [0,1)$ a discount
+factor. The agent seeks a policy $\pi(a \mid s)$ maximising the expected
+discounted return $\mathbb{E}\!\left[\sum_{t} \gamma^{t} r_t\right]$
+\cite{sutton2018}.
+
+CartPole-v1 has a four-dimensional continuous observation---cart position, cart
+velocity, pole angle and pole angular velocity---and two actions, pushing the
+cart left or right. Every timestep yields a reward of $1$. An episode terminates
+when the pole angle exceeds $12^{\circ}$ or the cart leaves the track, and is
+truncated at 500 steps. The maximum achievable return is therefore 500, and the
+conventional definition of solving the task is a mean return of at least
+\SolvedThreshold{}.
+
+\subsection{Tabular Q-learning}
+
+Q-learning \cite{watkins1992} estimates the optimal action-value function by the
+off-policy update
+\begin{equation}
+Q(s_t,a_t) \leftarrow Q(s_t,a_t) + \alpha
+\left[ r_t + \gamma \max_{a'} Q(s_{t+1},a') - Q(s_t,a_t) \right],
+\end{equation}
+which converges to $Q^{*}$ under standard conditions when every state--action
+pair is visited infinitely often and $Q$ is represented exactly.
+
+That last requirement is the difficulty here. An exact representation needs a
+finite state space, and CartPole's is continuous, so the observation must be
+discretised into bins. Two of its four dimensions---the two velocities---are
+unbounded, so they must additionally be clipped before they can be binned. The
+resulting agent therefore does not solve CartPole; it solves a discretised
+approximation of CartPole, and the gap between the two is a cost that the method
+pays and the other two do not.
+
+\subsection{Deep Q-networks}
+
+DQN \cite{mnih2015} replaces the table with a parameterised function
+$Q_\theta(s,a)$ and minimises the temporal-difference error against a bootstrap
+target. Two devices stabilise what is otherwise a moving-target regression:
+
+\begin{itemize}
+\item a \emph{replay buffer}, which stores past transitions and samples training
+      batches uniformly from them, breaking the temporal correlation that would
+      otherwise violate the i.i.d.\ assumption of stochastic gradient descent;
+\item a \emph{target network} $Q_{\theta^-}$, a periodically refreshed copy of
+      the online network used to compute the bootstrap term, which stops the
+      regression target from moving with every gradient step.
+\end{itemize}
+
+The loss on a sampled transition is
+\begin{equation}
+\mathcal{L}(\theta) = \ell_{\delta}\!\left(
+  Q_\theta(s,a) -
+  \left[ r + \gamma (1 - d) \max_{a'} Q_{\theta^-}(s',a') \right]
+\right),
+\end{equation}
+where $\ell_{\delta}$ is the Huber loss and $d$ indicates a genuine termination.
+Section~\ref{sec:extended} ablates the target network to show what it buys.
+
+\subsection{REINFORCE with a baseline}
+
+REINFORCE \cite{williams1992} optimises a parameterised policy $\pi_\theta$
+directly, following the policy gradient
+\begin{equation}
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}
+\left[ \nabla_\theta \log \pi_\theta(a_t \mid s_t)\,
+\left( G_t - b(s_t) \right) \right],
+\end{equation}
+where $G_t$ is the Monte-Carlo return from timestep $t$ and $b(s_t)$ is a
+baseline. Any function of the state alone leaves the gradient unbiased, so the
+baseline is free to reduce variance; the standard choice, adopted here, is a
+learned state-value estimate $\hat{V}_\phi(s)$ trained by regression on the
+observed returns \cite{sutton2018}.
+
+The baseline is not cosmetic. Because every CartPole reward is $+1$, the raw
+return $G_t$ is large and strictly positive, so an unbaselined update increases
+the log-probability of \emph{every} action taken in a successful episode,
+including the poor ones---the gradient carries the correct signal only through
+differences in magnitude. Subtracting $\hat{V}_\phi(s)$ centres the signal so
+that only better-than-expected actions are reinforced. This is ablated in
+Section~\ref{sec:extended}.
+
+Note that returns are deliberately \emph{not} whitened. Dividing by the batch
+standard deviation, common in tutorial implementations, rescales the gradient as
+well as centring it; it is an adaptive step size rather than a baseline, and it
+would confound the ablation.
 
 \section{Experimental Design}
-% DESIGN
+\label{sec:design}
+
+The design follows the reproducibility recommendations of Henderson et al.\
+\cite{henderson2018} and the statistical recommendations of Agarwal et al.\
+\cite{agarwal2021}.
+
+\subsection{Shared budget and a single training loop}
+
+All three agents run under one training loop, differing only in what they do with
+a transition. Each run receives exactly \StepBudget{} environment steps, and
+learning curves are plotted against environment steps rather than episodes. The
+distinction matters: a CartPole episode lasts around 20 steps for an untrained
+policy and 500 for a good one, so an episode budget silently grants the better
+method up to twenty-five times more data.
+
+The loop bootstraps through a time-limit truncation but not through a genuine
+termination. Treating the 500-step truncation as terminal would teach both
+value-based methods that balancing the pole indefinitely is worth nothing.
+
+\subsection{Evaluation protocol}
+
+Training return is a poor measure of policy quality, because it includes the
+cost of exploration and therefore penalises whichever method explores most. Every
+\EvalEvery{} steps, training is paused and the agent is evaluated for
+\EvalEpisodes{} episodes with exploration disabled: greedy action selection for
+the two value-based methods, and the mode of the action distribution for
+REINFORCE.
+
+The evaluation episodes use a fixed set of environment seeds, identical for every
+method, every seed and every evaluation point. The evaluation set is therefore
+held out and constant, so a difference between two curves reflects the policies
+rather than a difference in the states they happened to be tested on.
+
+\subsection{Equal-budget hyperparameter search}
+
+Each method receives \NumTrials{} random-search trials drawn from a discrete
+space of its own hyperparameters, evaluated on \NumTuningSeeds{} tuning seeds and
+scored by area under the evaluation curve---a criterion that rewards reaching a
+high return and reaching it early. The winning configuration is then frozen and
+run on \NumSeeds{} fresh evaluation seeds. Tuning seeds and evaluation seeds are
+disjoint, so no reported result is tuned on its own test set. The full search
+spaces and the selected values appear in Appendix~A.
+
+\subsection{Statistics}
+
+Reinforcement learning results across seeds are skewed and frequently bimodal: a
+run either solves the task or collapses. The sample mean describes neither mode,
+and one failed seed in ten moves it substantially. Following Agarwal et al.\
+\cite{agarwal2021}, the point estimate is the \emph{interquartile mean} (IQM),
+the mean of the middle 50\% of the seeds, and uncertainty is reported as a 95\%
+percentile bootstrap interval resampled over seeds. Per-seed final performance is
+also plotted directly, so that any bimodality remains visible rather than being
+absorbed into an aggregate.
 
 \section{Implementation}
-% IMPLEMENTATION
+
+The implementation is a single Python package. All three agents expose the same
+four-operation interface---select an action, accept a transition, finish an
+episode, report diagnostics---so the training loop, the evaluation procedure and
+the logging are written once and shared. Every behavioural difference between the
+methods lives in the update.
+
+Both neural methods use a two-layer multilayer perceptron with 128 hidden units
+per layer and ReLU activations, optimised with Adam. DQN uses this network for
+$Q_\theta$ and a periodically synchronised copy for $Q_{\theta^-}$; REINFORCE
+uses one for the policy logits and a second, separately optimised network for the
+baseline $\hat{V}_\phi$.
+
+One configuration object fully determines one run, and a hash of it names that
+run's output files. This makes the run matrix resume-safe---an interrupted sweep
+restarts without repeating completed work---and it means every curve in this
+paper can be traced to the exact settings that produced it. Runs execute in a
+process pool, one run per worker, each pinned to a single thread so that the
+reported wall-clock times are not distorted by workers competing for cores.
+
+Correctness is protected at the points where an error would be silent rather than
+loud. A wrong sign in the advantage or an off-by-one in the discounted return
+does not raise an exception; it produces a plausible learning curve and a wrong
+paper. The discounted-return computation, the state discretiser's clipping
+behaviour, the replay buffer's contents under overwrite, and the aggregation
+statistics are therefore checked against hand-computed values, and every method
+is checked to reproduce its curve exactly from a fixed seed.
+
+Every figure and table in this paper is generated from the raw result files, and
+every number quoted in the text is a macro produced by the same stage, so the
+prose cannot drift out of step with the data.
 
 \section{Results}
 % RESULTS

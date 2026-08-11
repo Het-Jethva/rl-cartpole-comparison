@@ -100,7 +100,9 @@ def command_analyse(args: argparse.Namespace) -> int:
     figure_dir = ROOT / "paper" / "figures"
     table_dir = ROOT / "paper" / "tables"
     written = build_all_figures(study, RESULTS, figure_dir)
-    written += build_all_tables(study, RESULTS, table_dir, package_root=ROOT / "rlcompare")
+    written += build_all_tables(
+        study, _load_tuned(), RESULTS, table_dir, package_root=ROOT / "rlcompare"
+    )
     for path in written:
         print(f"  wrote {path.relative_to(ROOT)}")
     return 0

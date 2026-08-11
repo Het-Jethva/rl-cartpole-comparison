@@ -65,10 +65,12 @@ ablations:
   reinforce_no_baseline:
     method: reinforce
     label: REINFORCE without baseline
+    short_label: without baseline
     params:
       use_baseline: false
   dqn_no_target:
     method: dqn
     label: DQN without target network
+    short_label: without target network
     params:
       use_target_network: false
