@@ -114,8 +114,10 @@ conventional definition of solving the task is a mean return of at least
 Q-learning \cite{watkins1992} estimates the optimal action-value function by the
 off-policy update
 \begin{equation}
-Q(s_t,a_t) \leftarrow Q(s_t,a_t) + \alpha
-\left[ r_t + \gamma \max_{a'} Q(s_{t+1},a') - Q(s_t,a_t) \right],
+\begin{split}
+Q(s_t,a_t) \leftarrow{} & Q(s_t,a_t) \\
+  & + \alpha \left[ r_t + \gamma \max_{a'} Q(s_{t+1},a') - Q(s_t,a_t) \right],
+\end{split}
 \end{equation}
 which converges to $Q^{*}$ under standard conditions when every state--action
 pair is visited infinitely often and $Q$ is represented exactly.
@@ -279,7 +281,42 @@ prose cannot drift out of step with the data.
 % DISCUSSION
 
 \section{Threats to Validity}
-% THREATS
+
+\textbf{A single environment.} Every result here comes from CartPole-v1. The task
+is low-dimensional, densely rewarded, and solvable by a linear policy, and it is
+therefore the most favourable possible setting for the tabular method: four
+dimensions is few enough to discretise at all. On a task with a higher-dimensional
+observation, the table would grow exponentially while the two neural methods would
+be unchanged in size. The direction of that effect is predictable, but its
+magnitude is not measured here, and no result in this paper should be read as a
+claim about reinforcement learning in general.
+
+\textbf{Dense reward.} CartPole gives a reward at every timestep, which suits
+Monte-Carlo policy gradients particularly well. Under a sparse reward, REINFORCE
+receives an informative gradient only from the rare successful episode, and the
+comparison could reverse. Testing that would need a second environment.
+
+\textbf{Search budget.} The hyperparameter search is equal across methods by
+construction, but it is small---\NumTrials{} trials over a discrete grid. A larger
+budget could favour whichever method has the most delicate configuration, most
+plausibly DQN, which has twice as many hyperparameters as REINFORCE. The equality
+of the budget is defensible; its size is a limitation.
+
+\textbf{Ten seeds.} \NumSeeds{} seeds is enough for an interquartile mean to be
+meaningful and enough to expose a bimodal outcome, but it is too few for
+well-powered significance testing between arms whose intervals overlap. No
+pairwise significance claim is made anywhere in this paper for that reason.
+
+\textbf{Implementation cost is partly subjective.} Source lines and hyperparameter
+count are objective once the counting rule is fixed, but the rule involves
+judgement: the shared training loop is excluded, and a differently factored
+implementation would produce different numbers. The column is best read as an
+ordering, not as a measurement.
+
+\textbf{Wall-clock time is machine-specific.} All runs executed on the same
+machine, one thread each, so the comparison between methods is fair; the absolute
+values are not portable, and the ratio would change on a GPU---where the two
+neural methods would gain and the tabular method would not.
 
 \section{Conclusion}
 % CONCLUSION
