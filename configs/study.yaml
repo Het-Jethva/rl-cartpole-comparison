@@ -1,0 +1,74 @@
+# The complete study design. Everything the run matrix contains is derived from
+# this file, so changing the experiment means editing YAML, not editing code.
+
+methods: [tabular, dqn, reinforce]
+
+run:
+  env_id: CartPole-v1
+  total_steps: 100000      # identical budget for every method
+  eval_every: 2000         # pause and evaluate with exploration switched off
+  eval_episodes: 10
+  solved_threshold: 475.0  # the standard CartPole-v1 definition of "solved"
+
+seeds:
+  # Disjoint from the evaluation seeds: results are never tuned on their test set.
+  tuning: [100, 101, 102]
+  evaluation: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  sweep: [0, 1, 2, 3, 4]
+
+tuning:
+  trials: 12               # equal budget per method - this is the fairness claim
+  search_seed: 20250811
+  spaces:
+    tabular:
+      alpha: [0.05, 0.1, 0.2, 0.5]
+      gamma: [0.99, 0.999]
+      eps_decay_steps: [10000, 20000, 30000, 50000]
+      bins:
+        - [3, 3, 6, 6]
+        - [4, 4, 8, 8]
+        - [6, 6, 12, 12]
+        - [8, 8, 16, 16]
+    dqn:
+      lr: [0.0003, 0.001, 0.003]
+      target_update_interval: [100, 500, 1000]
+      batch_size: [32, 64, 128]
+      eps_decay_steps: [5000, 10000, 20000]
+    reinforce:
+      lr: [0.0003, 0.001, 0.003]
+      baseline_lr: [0.001, 0.003]
+      gamma: [0.99, 0.999]
+      episodes_per_update: [1, 5, 10]
+
+# One sensitivity sweep per method, over the knob that carries its trade-off.
+sweeps:
+  tabular:
+    parameter: bins
+    label: bins per dimension
+    values:
+      - [3, 3, 6, 6]
+      - [4, 4, 8, 8]
+      - [6, 6, 12, 12]
+      - [8, 8, 16, 16]
+      - [12, 12, 24, 24]
+  dqn:
+    parameter: target_update_interval
+    label: target network update interval
+    values: [1, 100, 500, 1000, 5000]
+  reinforce:
+    parameter: lr
+    label: policy learning rate
+    values: [0.0001, 0.0003, 0.001, 0.003, 0.01]
+
+# Component removals. Each is a one-flag change from the tuned configuration.
+ablations:
+  reinforce_no_baseline:
+    method: reinforce
+    label: REINFORCE without baseline
+    params:
+      use_baseline: false
+  dqn_no_target:
+    method: dqn
+    label: DQN without target network
+    params:
+      use_target_network: false
