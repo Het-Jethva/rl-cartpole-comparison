@@ -116,6 +116,13 @@ def command_all(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_demo(args: argparse.Namespace) -> int:
+    from rlcompare.demo import serve_demo
+
+    serve_demo(ROOT, port=args.port, open_browser=not args.no_browser)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--workers", type=int, default=12, help="parallel worker processes")
@@ -127,6 +134,11 @@ def main() -> int:
     single.add_argument("--steps", type=int, default=None)
     single.add_argument("--eval-every", type=int, default=None, dest="eval_every")
     single.set_defaults(func=command_single)
+
+    demo = subparsers.add_parser("demo", help="watch the agents train in a local browser")
+    demo.add_argument("--port", type=int, default=8765, help="local HTTP port, default 8765")
+    demo.add_argument("--no-browser", action="store_true", help="do not open the browser automatically")
+    demo.set_defaults(func=command_demo)
 
     subparsers.add_parser("tune", help="equal-budget random search").set_defaults(func=command_tune)
     subparsers.add_parser("matrix", help="main, sweeps and ablations").set_defaults(func=command_matrix)

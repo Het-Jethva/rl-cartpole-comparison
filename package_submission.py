@@ -19,6 +19,7 @@ OUTPUT = ROOT / "submission" / "rl-cartpole-comparison.zip"
 # (source, destination inside the archive)
 INCLUDE_FILES = [
     (ROOT / "README.md", "README.md"),
+    (ROOT / "README.md", "code/README.md"),
     (ROOT / "pyproject.toml", "code/pyproject.toml"),
     (ROOT / "uv.lock", "code/uv.lock"),
     (ROOT / "run.py", "code/run.py"),

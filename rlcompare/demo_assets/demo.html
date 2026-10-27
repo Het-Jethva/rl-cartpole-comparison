@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CartPole | Live training</title>
+  <link rel="stylesheet" href="/demo.css">
+  <script src="/demo.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><div><h1>CartPole, learning live.</h1><p>Value-based and policy-based reinforcement learning on CartPole-v1.</p></div><span class="status" id="status" role="status">Connecting</span></header>
+    <div id="error" role="alert" hidden></div>
+    <div class="workspace">
+      <aside aria-label="Training controls">
+        <h2>Run an experiment</h2>
+        <form id="settings">
+          <label for="method">Algorithm</label>
+          <select id="method"><option value="reinforce">REINFORCE + baseline</option><option value="dqn">DQN</option><option value="tabular">Tabular Q-learning</option></select>
+          <p id="method-note" class="help">Learns a policy directly. A value baseline reduces variance.</p>
+          <div class="pair"><div><label for="seed">Seed</label><input id="seed" type="number" min="0" max="4294967295" step="1" value="0" required></div><div><label for="budget">Step budget</label><input id="budget" type="number" min="100" max="100000" step="100" value="100000" required></div></div>
+          <button type="submit" id="reset" class="secondary full">Reset with these settings</button>
+        </form>
+        <div class="run-controls"><button id="start" class="primary">Start training</button><button id="pause" class="secondary" disabled>Pause</button></div>
+        <label for="speed">Training speed</label>
+        <select id="speed"><option value="1">Real time · every step</option><option value="20" selected>Fast · sampled frames</option><option value="200">Turbo · sampled frames</option></select>
+        <p class="help" id="speed-note">Fast and Turbo perform real updates between displayed frames.</p>
+        <div class="evaluation-control"><h2>Inspect the policy</h2><p>Pause learning and test the current agent without exploration.</p><button id="evaluate" class="secondary full">Evaluate policy</button><p class="help">Ten fixed evaluation seeds. Watch the first episode. Training resumes only when you choose.</p></div>
+        <p class="session-note">One live session, one seed. Demo results are illustrative. The paper compares ten seeds.</p>
+      </aside>
+      <section class="experiment" aria-label="Live experiment">
+        <div class="view-header"><h2 id="view-title">Training environment</h2><span id="view-note">Exploration enabled</span></div>
+        <div class="simulation"><canvas id="cartpole" width="1000" height="400" role="img" aria-label="Live CartPole state. The cart moves left and right to keep the pole upright."></canvas><div class="simulation-caption"><span id="frame-label">Ready for the first action</span><span>Failure limits ±2.4 m / ±12°</span></div></div>
+        <div class="readouts" aria-label="Training metrics"><div><span>Training steps</span><strong id="steps">0</strong><small id="budget-label">of 100,000</small></div><div><span>Training episode</span><strong id="episode">1</strong><small id="last-score">No completed episodes</small></div><div><span id="score-label">Current return</span><strong id="score">0</strong><small>Maximum 500 per episode</small></div><div><span>Learning updates</span><strong id="updates">0</strong><small id="angle">Pole angle 0.0°</small></div></div>
+        <div class="progress" role="progressbar" aria-label="Training budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+        <section class="charts" aria-label="Learning progress"><div><h2>Training returns</h2><p>Exploration enabled. Recent completed episodes.</p><canvas id="training-chart" width="600" height="240" role="img" aria-label="Training episode return versus environment steps"></canvas><p id="training-summary" class="chart-summary">Start training to see episode returns.</p></div><div><h2>Evaluation returns</h2><p>Exploration disabled. Mean over ten fixed seeds.</p><canvas id="evaluation-chart" width="600" height="240" role="img" aria-label="Mean evaluation return versus training steps"></canvas><p id="evaluation-summary" class="chart-summary">Choose Evaluate policy to measure the agent.</p></div></section>
+        <footer>CartPole gives +1 reward per step. An episode ends when the pole falls, the cart leaves the track, or 500 steps pass. Tuned parameters come from this project's study.</footer>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

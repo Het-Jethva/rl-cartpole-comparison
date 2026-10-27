@@ -85,11 +85,47 @@ uv run python run.py single --method dqn --seed 0 --steps 20000
 
 Adjust parallelism with `--workers N` (default 12).
 
+## Show live training
+
+```bash
+uv run python run.py demo
+```
+
+The command opens a local browser at `http://127.0.0.1:8765`. Select an algorithm,
+seed, and step budget, then choose **Reset with these settings** and **Start
+training**. The cart and pole show actual Gymnasium observations while the
+project's agents learn with the tuned study parameters.
+
+Use **Fast** or **Turbo** to train between displayed frames. Use **Real time** to
+show every environment step. **Pause** stops after the current bounded batch.
+**Evaluate policy** pauses learning, tests ten fixed evaluation seeds without
+exploration, and animates the first episode. Its mean return appears separately
+from training episode returns. Resume training when the evaluation finishes.
+
+For a presentation, start with REINFORCE, train in Turbo, pause after several
+thousand steps, and evaluate the policy. Repeat later to show how its behavior
+changes. A single seed need not improve steadily or solve within a short demo.
+The paper's aggregate results remain the comparison across ten seeds.
+
+The demo runs offline, requires no extra packages, and keeps its session in
+memory. Reset discards the live agent. It does not write into `results/` or change
+the paper. One session is shared by local browser tabs. To choose a different
+port or open the page yourself, run:
+
+```bash
+uv run python run.py demo --port 8766 --no-browser
+```
+
+Press Ctrl+C in the terminal to stop the server.
+
 ## Tests
 
 ```bash
 uv run pytest
 ```
+
+If Node.js is available, run `node tests/test_demo_ui.cjs` to check evaluation
+playback when you pause or hide the browser during a request.
 
 The suite is small on purpose. It does not chase coverage; it targets the places
 where a mistake would be **silent** — a sign error in the advantage or an
