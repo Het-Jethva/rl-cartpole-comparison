@@ -50,7 +50,7 @@ threshold first (\ReiSolve{} steps), ends at the maximum return
 fewer than DQN's \DqnUpdates{}---with the fewest hyperparameters of the three.
 DQN is the most expensive method on every cost axis and leads on none.
 Tabular Q-learning is the fastest in wall-clock time and the least reliable: every
-seed attains the maximum return at some point, yet its final interquartile mean is
+seed produces a maximum-return evaluation episode, yet its final interquartile mean is
 \TabFinal{}, because the discretisation its exact representation requires makes
 distinct states indistinguishable. Ablations locate these outcomes precisely:
 removing DQN's target network eliminates learning entirely
@@ -281,8 +281,10 @@ One configuration object fully determines one run, and a hash of it names that
 run's output files. This makes the run matrix resume-safe---an interrupted sweep
 restarts without repeating completed work---and it means every curve in this
 paper can be traced to the exact settings that produced it. Runs execute in a
-process pool, one run per worker, each pinned to a single thread so that the
-reported wall-clock times are not distorted by workers competing for cores.
+process pool, one run per worker, with one PyTorch compute thread per worker to
+avoid nested thread pools. The reported rerun uses eight workers on an AMD Ryzen
+7 8845HS running Windows 11, with Python 3.12.14 and PyTorch 2.13.0. Wall-clock
+times include held-out evaluation and reflect this concurrent execution setup.
 
 Correctness is protected at the points where an error would be silent rather than
 loud. A wrong sign in the advantage or an off-by-one in the discounted return
@@ -352,8 +354,8 @@ permits, on every seed in the interquartile range. DQN attains \DqnFinal{}
 
 Fig.~\ref{fig:scatter} shows why the aggregate alone would be misleading. The
 tabular agent's per-seed final returns are spread across almost the whole
-available range, despite every seed having reached a return of 500 at some earlier
-point in training. The agent does not converge to a mediocre policy; it oscillates
+available range, despite every seed having produced an individual evaluation
+episode scoring 500 during training. The agent does not converge to a mediocre policy; it oscillates
 between good and poor ones, and the final measurement catches it at an arbitrary
 point in that oscillation. This is the expected behaviour of Q-learning under
 function approximation coarse enough to violate its convergence conditions: with
@@ -362,7 +364,7 @@ table entry, so no fixed point of the tabular update corresponds to a good polic
 in the underlying continuous problem.
 
 Supporting this, only \TabCoverage{}\% of the table's cells are ever visited
-within the budget, even though the search selected the \emph{coarsest} of its
+within the budget, even though the search selected a relatively coarse one of its
 candidate discretisations. Finer grids were available and were rejected: a finer
 grid represents the dynamics better but cannot be filled with \StepBudget{}
 samples. That tension---representational fidelity against sample cost---is the
@@ -564,13 +566,13 @@ The tabular results make the clearest single point in this study. Q-learning is
 guaranteed to converge to the optimal action-value function under an exact
 representation \cite{watkins1992}. Applying it to CartPole requires abandoning
 that condition, and the consequence is not a slightly worse policy---it is the
-loss of a stable one. The agent reaches maximum return on every seed and then
-fails to stay there, because the discretisation makes states that require
+loss of a stable one. Every seed produces a maximum-return evaluation episode,
+but none ends with a maximum mean evaluation return, because the discretisation makes states that require
 different actions indistinguishable.
 
 Choosing the bin count is therefore not a tuning detail on the same footing as a
 learning rate. It defines what problem is being solved. The search selected the
-coarsest available grid, which is the correct choice under a
+grid with the highest mean tuning area under the curve under a
 \StepBudget{}\,step budget and simultaneously the choice that guarantees the
 representation is inadequate. There is no setting that escapes both horns within
 this budget, which is precisely the argument for function approximation.
@@ -633,8 +635,8 @@ interquartile means with bootstrap intervals over \NumRunsTotal{} runs in total.
 
 The comparison does not produce a ranking, because the ordering of the three
 methods changes with the cost being measured. Tabular Q-learning is the cheapest
-to run and the least reliable: it reaches maximum return on every seed and holds
-it on none, because the discretisation its exact representation demands destroys
+to run and the least reliable: every seed produces a maximum-return evaluation
+episode, but none ends with a maximum mean evaluation return, because the discretisation its exact representation demands destroys
 the distinctions the task requires. DQN is the most expensive method to implement,
 to configure and to compute, and on this task it leads on no performance axis;
 its stabilising machinery addresses difficulties CartPole does not present.

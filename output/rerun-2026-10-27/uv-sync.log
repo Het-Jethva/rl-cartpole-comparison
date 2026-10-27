@@ -1,0 +1,11 @@
+   Building rlcompare @ file:///C:/Users/Het/Desktop/rl-cartpole-comparison
+      Built rlcompare @ file:///C:/Users/Het/Desktop/rl-cartpole-comparison
+Prepared 1 package in 503ms
+Uninstalled 5 packages in 38ms
+Installed 1 package in 7ms
+ - editables==0.6
+ - hatchling==1.32.4
+ - pathspec==1.1.1
+ + rlcompare==1.0.0 (from file:///C:/Users/Het/Desktop/rl-cartpole-comparison)
+ - tomlkit==0.15.2
+ - trove-classifiers==2026.9.21.13

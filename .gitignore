@@ -7,7 +7,6 @@ __pycache__/
 .ruff_cache/
 
 # Experiment output
-results/
 runs/
 *.csv.gz
 
@@ -29,5 +28,9 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Submission archive (regenerate with package_submission.py)
-submission/
+# Downloaded dependencies and local compiler binaries
+output/rerun-*/wheels/
+output/rerun-*/tectonic/
+output/rerun-*/*.whl
+output/rerun-*/tectonic*.zip
+output/rerun-*/IEEEtran-check.cls

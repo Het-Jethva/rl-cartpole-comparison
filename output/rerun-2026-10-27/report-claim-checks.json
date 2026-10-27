@@ -1,0 +1,17 @@
+{
+  "all_tabular_seeds_have_a_500_episode": true,
+  "tabular_seeds_with_a_500_evaluation_mean": 9,
+  "tabular_seeds_ending_with_mean_500": 0,
+  "selected_grid": [
+    4,
+    4,
+    8,
+    8
+  ],
+  "smallest_candidate_grid": [
+    3,
+    3,
+    6,
+    6
+  ]
+}

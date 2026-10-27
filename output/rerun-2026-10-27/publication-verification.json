@@ -1,0 +1,10 @@
+{
+  "entries": 507,
+  "verified_raw_files": 466,
+  "bytes": 3053112,
+  "sha256": "633fb1c3816eb2823778caecf53ddfbbeea8ef9aa9fe1317a45838dc07c6c1ee",
+  "crc_errors": 0,
+  "readme_matches_checkout": true,
+  "paper_matches_checkout": true,
+  "staged_raw_files_verified_byte_for_byte": 466
+}

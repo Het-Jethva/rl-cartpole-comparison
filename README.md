@@ -22,13 +22,18 @@ Interquartile mean over 10 seeds, identical budget of 100,000 environment steps:
 | Method | Steps to solve | Final return (IQM) | Wall clock | Gradient updates | Failed seeds | LoC / hyperparams |
 | --- | --- | --- | --- | --- | --- | --- |
 | Tabular Q-learning | 36k | 226 [133, 390] | **16 s** | 100,000 | 10% | 87 / 7 |
-| DQN | 55k | 486 [354, 500] | 214 s | 99,001 | 0% | 136 / 12 |
-| REINFORCE + baseline | **18k** | **500** [493, 500] | 46 s | **470** | 0% | 113 / **6** |
+| DQN | 55k | 486 [354, 500] | 180 s | 99,001 | 0% | 136 / 12 |
+| REINFORCE + baseline | **18k** | **500** [493, 500] | 39 s | **470** | 0% | 113 / **6** |
+
+The 27 October 2026 rerun reproduced the headline learning statistics with the
+locked dependencies. These wall-clock means include evaluation and come from
+eight concurrent workers on an AMD Ryzen 7 8845HS running Windows 11.
 
 The orderings disagree, which is the point. REINFORCE reaches the threshold first
 and ends at the maximum return using two orders of magnitude fewer gradient
 updates than DQN. Tabular Q-learning is the fastest to run and the least
-reliable — every seed reaches a return of 500 at some point, and none holds it,
+reliable. Every seed produces an individual evaluation episode scoring 500, but
+none ends with a mean evaluation return of 500,
 because the discretisation its exact representation demands makes distinct states
 indistinguishable. Removing DQN's target network collapses it to a return of 9;
 removing REINFORCE's baseline costs it 139 return but it still learns.
@@ -38,6 +43,11 @@ removing REINFORCE's baseline costs it 139 return but it still learns.
 - `paper/paper.pdf` — the research paper (IEEE two-column)
 - `rlcompare/` — the complete implementation
 - `results/` — every raw run: an evaluation-curve CSV and a config/metrics JSON
+
+Run `uv run python package_submission.py` after the experiments and PDF build to
+create `submission/rl-cartpole-comparison.zip` with all three deliverables.
+The raw results and submission archive are tracked in Git, so a clone includes
+the experiment data as well as the code and paper.
 
 ## Requirements
 

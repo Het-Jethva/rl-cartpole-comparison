@@ -1,0 +1,21 @@
+note: "version 2" Tectonic command-line interface activated
+note: Running TeX ...
+Fontconfig error: Cannot load default config file: No such file: (null)
+warning: paper.tex:136: Underfull \hbox (badness 10000) in paragraph at lines 129--136
+warning: paper.tex:328: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: paper.tex:605: Underfull \hbox (badness 1533) in paragraph at lines 601--605
+note: Running BibTeX on paper.aux ...
+note: Rerunning TeX because bibtex was run ...
+warning: paper.tex:136: Underfull \hbox (badness 10000) in paragraph at lines 129--136
+warning: paper.tex:328: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: paper.tex:605: Underfull \hbox (badness 1533) in paragraph at lines 601--605
+note: Rerunning TeX because "paper.aux" changed ...
+warning: paper.tex:136: Underfull \hbox (badness 10000) in paragraph at lines 129--136
+warning: paper.tex:328: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: paper.tex:605: Underfull \hbox (badness 1533) in paragraph at lines 601--605
+note: Running xdvipdfmx ...
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Writing `paper.log` (17.759765625 KiB)
+note: Writing `paper.pdf` (156.458984375 KiB)
+note: Writing `paper.blg` (380 B)
+note: Skipped writing 3 intermediate files (use --keep-intermediates to keep them)
